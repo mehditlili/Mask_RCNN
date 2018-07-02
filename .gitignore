@@ -1,5 +1,4 @@
 # Data files and directories common in repo root
-datasets/
 logs/
 *.h5
 results/
@@ -55,4 +54,3 @@ pip-delete-this-directory.txt
 # virtualenv
 .venv
 venv/
-ENV/
