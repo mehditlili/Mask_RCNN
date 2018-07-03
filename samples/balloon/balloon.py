@@ -69,7 +69,7 @@ class BalloonConfig(Config):
     NUM_CLASSES = 1 + 1  # Background + balloon
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 10
+    STEPS_PER_EPOCH = 100
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
@@ -109,13 +109,11 @@ class BalloonDataset(utils.Dataset):
         # }
         # We mostly care about the x and y coordinates of each region
         annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
-        annotations = annotations["_via_img_metadata"].values()  # don't need the dict keys
-        print(annotations)
+        annotations = list(annotations.values())  # don't need the dict keys
+
         # The VIA tool saves images in the JSON even if they don't have any
         # annotations. Skip unannotated images.
         annotations = [a for a in annotations if a['regions']]
-        print ("======================")
-        print(annotations)
 
         # Add images
         for a in annotations:
@@ -192,7 +190,7 @@ def train(model):
     print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=1,
+                epochs=30,
                 layers='heads')
 
 
