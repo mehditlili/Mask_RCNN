@@ -54,12 +54,12 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 ############################################################
 
 
-class BoxConfig(Config):
+class BalloonConfig(Config):
     """Configuration for training on the toy  dataset.
     Derives from the base Config class and overrides some values.
     """
     # Give the configuration a recognizable name
-    NAME = "box"
+    NAME = "balloon"
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
@@ -79,15 +79,15 @@ class BoxConfig(Config):
 #  Dataset
 ############################################################
 
-class BoxDataset(utils.Dataset):
+class BalloonDataset(utils.Dataset):
 
-    def load_box(self, dataset_dir, subset):
+    def load_balloon(self, dataset_dir, subset):
         """Load a subset of the Balloon dataset.
         dataset_dir: Root directory of the dataset.
         subset: Subset to load: train or val
         """
         # Add classes. We have only one class to add.
-        self.add_class("box", 1, "box")
+        self.add_class("balloon", 1, "balloon")
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
@@ -120,7 +120,7 @@ class BoxDataset(utils.Dataset):
             # Get the x, y coordinaets of points of the polygons that make up
             # the outline of each object instance. There are stores in the
             # shape_attributes (see json format above)
-            polygons = [r['shape_attributes'] for r in a['regions'].values()]
+            polygons = [r['shape_attributes'] for r in a['regions']]
 
             # load_mask() needs the image size to convert polygons to masks.
             # Unfortunately, VIA doesn't include it in JSON, so we must read
@@ -130,7 +130,7 @@ class BoxDataset(utils.Dataset):
             height, width = image.shape[:2]
 
             self.add_image(
-                "box",
+                "balloon",
                 image_id=a['filename'],  # use file name as a unique image id
                 path=image_path,
                 width=width, height=height,
@@ -145,7 +145,7 @@ class BoxDataset(utils.Dataset):
         """
         # If not a balloon dataset image, delegate to parent class.
         image_info = self.image_info[image_id]
-        if image_info["source"] != "box":
+        if image_info["source"] != "balloon":
             return super(self.__class__, self).load_mask(image_id)
 
         # Convert polygons to a bitmap mask of shape
@@ -165,7 +165,7 @@ class BoxDataset(utils.Dataset):
     def image_reference(self, image_id):
         """Return the path of the image."""
         info = self.image_info[image_id]
-        if info["source"] == "box":
+        if info["source"] == "balloon":
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
@@ -174,7 +174,7 @@ class BoxDataset(utils.Dataset):
 def train(model):
     """Train the model."""
     # Training dataset.
-    dataset_train = BoxDataset()
+    dataset_train = BalloonDataset()
     dataset_train.load_balloon(args.dataset, "train")
     dataset_train.prepare()
 
@@ -208,8 +208,7 @@ def color_splash(image, mask):
     if mask.shape[-1] > 0:
         # We're treating all instances as one, so collapse the mask into one layer
         mask = (np.sum(mask, -1, keepdims=True) >= 1)
-        splash = np.where(mask, image,
- gray).astype(np.uint8)
+        splash = np.where(mask, image, gray).astype(np.uint8)
     else:
         splash = gray.astype(np.uint8)
     return splash

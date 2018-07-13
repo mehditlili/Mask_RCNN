@@ -81,6 +81,31 @@ class BalloonConfig(Config):
 
 class BalloonDataset(utils.Dataset):
 
+    def generate_training_data(self, DATA_DIR):
+        annotations = json.load(open(os.path.join(DATA_DIR, "via_region_data.json")))
+        # remove non annotated images
+        annotations2 = list(annotations.values())  # don't need the dict keys
+        annotations2 = [a for a in annotations2 if a['regions']]
+        data_len = len(annotations2)
+        train_coeff = 0.7
+        np.random.shuffle(annotations2)
+        train, test = annotations2[:int(train_coeff*data_len)], annotations2[int(train_coeff*data_len):]
+        train = [t['filename'] for t in train]
+        test = [t['filename'] for t in test]
+        os.system("mkdir "+ os.path.join(DATA_DIR, 'train'))
+        os.system("mkdir "+ os.path.join(DATA_DIR, 'val'))
+
+        train_dict = {k: annotations[k] for k in annotations.keys() if annotations[k]['filename'] in train}
+        test_dict = {k: annotations[k] for k in annotations.keys() if annotations[k]['filename'] in test}
+        with open(os.path.join(os.path.join(DATA_DIR, 'train'),'via_region_data.json'), 'w') as outfile:
+            json.dump(train_dict, outfile)
+        with open(os.path.join(os.path.join(DATA_DIR, 'val'),'via_region_data.json'), 'w') as outfile:
+            json.dump(test_dict, outfile)
+        for filename in train:
+            os.system("cp "+os.path.join(DATA_DIR, filename)+" "+os.path.join(DATA_DIR, 'train'))
+        for filename in test:
+            os.system("cp "+os.path.join(DATA_DIR, filename)+" "+os.path.join(DATA_DIR, 'val'))
+        
     def load_balloon(self, dataset_dir, subset):
         """Load a subset of the Balloon dataset.
         dataset_dir: Root directory of the dataset.
@@ -90,7 +115,7 @@ class BalloonDataset(utils.Dataset):
         self.add_class("balloon", 1, "balloon")
 
         # Train or validation dataset?
-        assert subset in ["train", "val"]
+        assert subset in ["train", "val", "data"]
         dataset_dir = os.path.join(dataset_dir, subset)
 
         # Load annotations
